@@ -1,0 +1,38 @@
+---
+- name: Setting up Kodo Server FQDN
+  set_fact:
+    server_fqdn: "{{ ansible_nodename }}"
+  when: server_fqdn is undefined
+
+- name: Using the following Kodo Server FQDN
+  debug:
+    msg: "vProtect Server FQDN: {{ server_fqdn }}"
+
+- name: Add MariaDB repository
+  yum_repository:
+    name: MariaDB
+    description: MariaDB repository
+    baseurl: "{{ mariadb_repo_url }}"
+    gpgkey: "{{ mariadb_repo_gpg_key }}"
+    gpgcheck: yes
+
+- name: Ensure MariaDB repository on CentOS/RHEL 8 has 'module_hotfixes' option enabled
+  ini_file:
+    path: /etc/yum.repos.d/MariaDB.repo
+    section: MariaDB
+    option: module_hotfixes
+    value: "1"
+  when: ansible_distribution_major_version|int >= 8
+
+- name: Add Kodo repository
+  yum_repository:
+    name: Kodo
+    description: Kodo repo
+    baseurl: "{{ kodo_repo }}"
+    gpgcheck: no
+
+- name: Update all packages
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
