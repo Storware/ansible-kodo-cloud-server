@@ -24,10 +24,10 @@
     value: "1"
   when: ansible_distribution_major_version|int >= 8
 
-- name: Add Kodo repository
+- name: Add Kodo Cloud repository
   yum_repository:
-    name: Kodo
-    description: Kodo repo
+    name: kodo-cloud
+    description: Kodo Cloud repo
     baseurl: "{{ kodo_repo }}"
     gpgcheck: no
 
@@ -36,3 +36,62 @@
     name: '*'
     state: latest
     update_cache: yes
+
+- name: Install Kodo Cloud Server and Python-MySQL integration
+  yum:
+    name:
+      - kodo-cloud-server
+      - python3-PyMySQL
+    state: latest
+
+- name: Start and enable MariaDB service
+  service:
+    name: mariadb
+    daemon-reload: yes
+    state: started
+    enabled: yes
+
+- name: Secure database
+  import_tasks: secure_mariadb.yaml
+
+- name: List existing databases
+  mysql_info:
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    filter:
+      - databases
+  register: db_list
+
+- name: Initialize Kodo Cloud Server
+  shell: "{{ kodo_init_script_path }} --dbrootpassword {{ mariadb_root_password }}"
+  when: "kodo_db_name not in db_list.databases"
+
+- name: Start and enable Kodo Cloud Server service
+  service:
+    name: kodo-cloud-server
+    daemon-reload: yes
+    state: started
+    enabled: yes
+
+- name: Start and enable firewalld service
+  service:
+    name: firewalld
+    daemon-reload: yes
+    state: started
+    enabled: yes
+
+- name: Firewall - open port 8181
+  firewalld:
+    port: 8181/tcp
+    zone: public
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+- name: Firewall - redirect port 443 to 8181
+  firewalld:
+    rich_rule: "rule family=ipv4 forward-port port=443 protocol=tcp to-port=8181"
+    zone: public
+    permanent: yes
+    immediate: yes
+    state: enabled
