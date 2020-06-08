@@ -62,7 +62,7 @@ ansible_user = root
 License
 -------
 
-BSD
+MIT
 
 Author Information
 ------------------
