@@ -56,7 +56,7 @@ ansible_user = root
 192.168.155.233
 
 [agents]
-192.168.155.233
+192.168.155.233 agent_name=agent1
 ```
 
 License
