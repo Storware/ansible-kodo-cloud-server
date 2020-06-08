@@ -31,12 +31,6 @@
     baseurl: "{{ kodo_repo }}"
     gpgcheck: no
 
-- name: Update all packages
-  yum:
-    name: '*'
-    state: latest
-    update_cache: yes
-
 - name: Install Kodo Cloud Server and Python-MySQL integration
   yum:
     name:
