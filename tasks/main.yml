@@ -1,12 +1,12 @@
 ---
-- name: Setting up Kodo Server FQDN
+- name: Setting up Kodo Cloud Server FQDN
   set_fact:
     server_fqdn: "{{ ansible_nodename }}"
   when: server_fqdn is undefined
 
-- name: Using the following Kodo Server FQDN
+- name: Using the following Kodo Cloud Server FQDN
   debug:
-    msg: "vProtect Server FQDN: {{ server_fqdn }}"
+    msg: "Kodo Cloud Server FQDN: {{ server_fqdn }}"
 
 - name: Add MariaDB repository
   yum_repository:
@@ -36,7 +36,7 @@
     name:
       - kodo-cloud-server
       - python3-PyMySQL
-    state: latest
+    state: present
 
 - name: Start and enable MariaDB service
   service:
