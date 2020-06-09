@@ -41,7 +41,9 @@
 
 - name: Setup VDO
   import_tasks: setup_vdo.yml
-  when: vdo_physical_device != ""
+  when:
+    - vdo_physical_device is defined
+    - vdo_physical_device | length > 0
 
 - name: Create staging and backup storage directories
   file:
