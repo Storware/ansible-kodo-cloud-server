@@ -1,0 +1,68 @@
+---
+- name: Start and enable VDO service
+  service:
+    name: vdo
+    daemon-reload: yes
+    state: started
+    enabled: yes
+
+- name: Check physical size for VDO device
+  command: "lsblk -Sbno SIZE {{ vdo_physical_device }}"
+  register: vdo_physical_device_size_out
+
+- name: Compute VDO logical size
+  set_fact:
+    vdo_logical_device_size: "{{ vdo_physical_device_size_out.stdout|int * 3 }}B"
+  when: vdo_logical_device_size is not defined
+
+- name: Set VDO logical device path
+  set_fact:
+    vdo_logical_device: "/dev/mapper/{{ vdo_volume_name }}"
+
+- name: Using the following VDO settings
+  debug:
+    msg:
+    - "Volume name: {{ vdo_volume_name }}"
+    - "Physical device: {{ vdo_physical_device }}"
+    - "Physical size: {{ vdo_physical_device_size_out.stdout|int }}"
+    - "Logical device: {{ vdo_logical_device }}"
+    - "Logical size: {{ vdo_logical_device_size }}"
+    - "File system: {{ vdo_fs }}"
+    - "Mount point: {{ vdo_mount_point }}"
+
+- name: Create VDO volume
+  vdo:
+    name: "{{ vdo_volume_name }}"
+    state: present
+    device: "{{ vdo_physical_device }}"
+    logicalsize: "{{ vdo_logical_device_size }}"
+
+- name: Create filesystem on VDO
+  filesystem:
+    fstype: "{{ vdo_fs }}"
+    dev: "{{ vdo_logical_device }}"
+    opts: "{{ vdo_fs_mkfs_opts }}"
+
+- name: Create directory for VDO mount point
+  file:
+    path: "{{ vdo_mount_point }}"
+    state: directory
+    owner: "{{ kodo_user }}"
+    group: "{{ kodo_group }}"
+    mode: "0770"
+
+- name: Mount VDO
+  mount:
+    path: "{{ vdo_mount_point }}"
+    src: "{{ vdo_logical_device }}"
+    fstype: "{{ vdo_fs }}"
+    opts: "defaults,discard,x-systemd.requires=vdo.service"
+    state: mounted
+
+- name: Set permissions on the VDO mount point
+  file:
+    path: "{{ vdo_mount_point }}"
+    state: directory
+    owner: "{{ kodo_user }}"
+    group: "{{ kodo_group }}"
+    mode: "0770"

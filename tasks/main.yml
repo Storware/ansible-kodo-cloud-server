@@ -31,12 +31,28 @@
     baseurl: "{{ kodo_repo }}"
     gpgcheck: no
 
-- name: Install Kodo Cloud Server and Python-MySQL integration
+- name: Install Kodo Cloud Server and dependencies
   yum:
     name:
       - kodo-cloud-server
       - python3-PyMySQL
+      - vdo
     state: present
+
+- name: Setup VDO
+  import_tasks: setup_vdo.yml
+  when: vdo_physical_device is defined
+
+- name: Create staging and backup storage directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ kodo_user }}"
+    group: "{{ kodo_group }}"
+    mode: "0770"
+  loop:
+    - "{{ kodo_backup_destination_path }}"
+    - "{{ kodo_staging_path }}"
 
 - name: Start and enable MariaDB service
   service:
@@ -46,7 +62,7 @@
     enabled: yes
 
 - name: Secure database
-  import_tasks: secure_mariadb.yaml
+  import_tasks: secure_mariadb.yml
 
 - name: List existing databases
   mysql_info:

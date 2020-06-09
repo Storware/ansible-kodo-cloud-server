@@ -19,9 +19,24 @@ mariadb_distro: "centos{{ ansible_distribution_major_version }}-amd64"
 mariadb_repo_url: "http://yum.mariadb.org/{{ mariadb_version }}/{{ mariadb_distro }}"
 mariadb_repo_gpg_key: "https://yum.mariadb.org/RPM-GPG-KEY-MariaDB"
 kodo_repo: "http://repo.storware.eu/kodo-cloud/current/el{{ ansible_distribution_major_version }}"
+kodo_staging_path: "/kodo_data"
+kodo_backup_destination_path: "{{ kodo_staging_path }}/backups"
+vdo_volume_name: "kodo"
+vdo_fs: "xfs"
+vdo_fs_mkfs_opts: "-K"
+vdo_mount_point: "{{ kodo_staging_path }}"
 ```
-`mariadb_*` variables are responsible for MariaDB installation (repository, version, distribution)
-`kodo_repo` variable points to Kodo Cloud RPM repository
+
+* `mariadb_*` - responsible for MariaDB installation (repository, version, distribution)
+* `kodo_repo` - points to Kodo Cloud RPM repository
+* `kodo_staging_path` - allows to configure where staging space resides on the server
+* `kodo_backup_destination_path` - allows to configure where backup storage resides on the server
+* `vdo_physical_device` - **by default not defined** - when set, configures VDO on the block device that has been specified (such as `/dev/sdb`)
+* `vdo_logical_device_size` - logical size of VDO volume, by default 3 * size of physical size of the VDO block device
+* `vdo_volume_name` - if VDO is to be configured - name of the VDO volume
+* `vdo_fs` - if VDO is to be configured - type of effective file system created on top of VDO
+* `vdo_fs_mkfs_opts` - if VDO is to be configured - mkfs parameters when creating effective file system on top of VDO
+* `vdo_mount_point` - if VDO is to be configured - mount point for effective file system used on top of VDO - usually staging space together with backup destination
 
 
 Dependencies
